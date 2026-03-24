@@ -5,8 +5,8 @@
 # Run and deploy your AI Studio app
 
 This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/53855d9a-ad9c-4297-bd40-8d066cec522b
+View our App Live Published : https://neon-snake-beats-993871925741.us-west1.run.app
+View app in AI Studio: https://ai.studio/apps/53855d9a-ad9c-4297-bd40-8d066cec522b
 
 ## Run Locally
 
