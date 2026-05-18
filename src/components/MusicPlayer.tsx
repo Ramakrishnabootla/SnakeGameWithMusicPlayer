@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Music } from 'lucide-react';
 
 const TRACKS = [
-  { id: 1, title: "DATA_STREAM_01.WAV", artist: "SYS.OP" },
-  { id: 2, title: "CORRUPTED_SECTOR.MP3", artist: "UNKNOWN_ENTITY" },
-  { id: 3, title: "NEURAL_LINK_ESTABLISHED", artist: "MAINFRAME" }
+  { id: 1, title: "Ambient Journey", artist: "SoundHelix", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+  { id: 2, title: "Calm Serenity", artist: "SoundHelix", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+  { id: 3, title: "Morning Vibes", artist: "SoundHelix", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
 ];
 
 export default function MusicPlayer() {
@@ -15,17 +16,16 @@ export default function MusicPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const currentTrack = TRACKS[currentTrackIndex];
 
-  const AUDIO_URLS = [
-    "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=synthwave-80s-110045.mp3",
-    "https://cdn.pixabay.com/download/audio/2022/10/25/audio_4f9d22f026.mp3?filename=cyberpunk-2099-10701.mp3",
-    "https://cdn.pixabay.com/download/audio/2021/11/25/audio_91b3cb81ea.mp3?filename=retrowave-103673.mp3"
-  ];
-
   useEffect(() => {
-    if (isPlaying) {
-      audioRef.current?.play().catch(() => setIsPlaying(false));
-    } else {
-      audioRef.current?.pause();
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch((err) => {
+          console.error("Audio playback error:", err);
+          setIsPlaying(false);
+        });
+      } else {
+        audioRef.current.pause();
+      }
     }
   }, [isPlaying, currentTrackIndex]);
 
@@ -52,95 +52,89 @@ export default function MusicPlayer() {
   };
 
   return (
-    <div className="w-full max-w-md bg-black border-4 border-cyan-glitch p-6 relative group">
+    <div className="w-full bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-xl shadow-purple-100/50 p-8 border border-white flex flex-col">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="p-3 bg-purple-100 text-purple-600 rounded-2xl shadow-inner">
+          <Music size={28} />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-slate-800">Music Box</h2>
+          <p className="text-base text-slate-500 font-medium mt-0.5">Relaxing background tunes</p>
+        </div>
+      </div>
+
       <audio
         ref={audioRef}
-        src={AUDIO_URLS[currentTrackIndex]}
+        src={currentTrack.url}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleNext}
       />
 
-      <div className="relative z-10 flex flex-col">
-        <div className="border-b-4 border-magenta-glitch pb-2 mb-6 flex justify-between items-end">
-          <h2 className="text-3xl text-cyan-glitch uppercase tracking-widest glitch" data-text="AUDIO_SUBSYSTEM">
-            AUDIO_SUBSYSTEM
-          </h2>
-          <span className="text-magenta-glitch text-xl animate-pulse">
-            {isPlaying ? '[ ACTIVE ]' : '[ IDLE ]'}
-          </span>
-        </div>
+      {/* Track Info */}
+      <div className="mb-8 text-center p-6 bg-slate-50/80 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
+        {/* Animated gradient accent */}
+        <div className={`absolute inset-0 bg-gradient-to-tr from-indigo-100/30 to-purple-100/30 transition-opacity duration-700 ${isPlaying ? 'opacity-100' : 'opacity-0'}`} />
+        
+        <h3 className="text-xl font-bold text-slate-800 mb-1.5 truncate relative z-10">
+          {currentTrack.title}
+        </h3>
+        <p className="text-base text-slate-500 font-semibold truncate relative z-10">
+          {currentTrack.artist}
+        </p>
+      </div>
 
-        {/* Track Info */}
-        <div className="mb-6 border-2 border-cyan-glitch p-4 bg-cyan-glitch/10">
-          <h3 className="text-2xl text-magenta-glitch mb-1 truncate uppercase">
-            {'>'} {currentTrack.title}
-          </h3>
-          <p className="text-xl text-cyan-glitch tracking-widest truncate uppercase">
-            SRC: {currentTrack.artist}
-          </p>
-        </div>
+      {/* Progress Bar */}
+      <div className="w-full mb-8 relative group">
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={progress || 0}
+          onChange={handleSeek}
+          className="w-full h-2.5 bg-slate-200 rounded-full appearance-none cursor-pointer accent-purple-500 hover:accent-purple-400 transition-all focus:outline-none focus:ring-4 focus:ring-purple-100"
+          style={{
+            background: `linear-gradient(to right, #a855f7 ${progress}%, #e2e8f0 ${progress}%)`
+          }}
+        />
+      </div>
 
-        {/* Visualizer Mock */}
-        <div className="h-16 border-2 border-magenta-glitch mb-6 flex items-end justify-between p-2 gap-1 overflow-hidden">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div 
-              key={i} 
-              className={`w-full ${isPlaying ? 'bg-cyan-glitch' : 'bg-cyan-glitch/20'}`}
-              style={{ 
-                height: isPlaying ? `${Math.random() * 100}%` : '10%',
-                transition: 'height 0.1s ease'
-              }}
-            />
-          ))}
-        </div>
+      {/* Controls */}
+      <div className="flex items-center justify-between w-full">
+        <button 
+          onClick={() => setIsMuted(!isMuted)}
+          className="p-3 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+        >
+          {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+        </button>
 
-        {/* Progress Bar */}
-        <div className="w-full mb-6 relative">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={progress || 0}
-            onChange={handleSeek}
-            className="w-full h-4 bg-black border-2 border-cyan-glitch appearance-none cursor-pointer accent-magenta-glitch"
-            style={{
-              background: `linear-gradient(to right, #f0f ${progress}%, #000 ${progress}%)`
-            }}
-          />
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center justify-between w-full border-t-2 border-cyan-glitch pt-6">
+        <div className="flex items-center gap-3">
           <button 
-            onClick={() => setIsMuted(!isMuted)}
-            className="text-2xl text-cyan-glitch hover:text-magenta-glitch hover:bg-cyan-glitch/20 px-2 py-1 border-2 border-transparent hover:border-magenta-glitch transition-colors"
+            onClick={handlePrev}
+            className="p-4 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 active:scale-95 rounded-2xl transition-all"
           >
-            {isMuted ? '[ MUTED ]' : '[ VOL_ON ]'}
+            <SkipBack size={24} fill="currentColor" />
           </button>
-
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={handlePrev}
-              className="text-2xl text-cyan-glitch hover:bg-magenta-glitch hover:text-black px-4 py-2 border-2 border-cyan-glitch transition-colors"
-            >
-              {'<<'}
-            </button>
-            
-            <button 
-              onClick={togglePlay}
-              className="text-2xl text-black bg-cyan-glitch hover:bg-magenta-glitch px-6 py-2 border-2 border-cyan-glitch transition-colors"
-            >
-              {isPlaying ? '||' : '>'}
-            </button>
-            
-            <button 
-              onClick={handleNext}
-              className="text-2xl text-cyan-glitch hover:bg-magenta-glitch hover:text-black px-4 py-2 border-2 border-cyan-glitch transition-colors"
-            >
-              {'>>'}
-            </button>
-          </div>
+          
+          <button 
+            onClick={togglePlay}
+            className={`p-5 text-white rounded-2xl active:scale-95 transition-all shadow-lg ${
+              isPlaying 
+                ? 'bg-slate-800 hover:bg-slate-900 shadow-slate-200' 
+                : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'
+            }`}
+          >
+            {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
+          </button>
+          
+          <button 
+            onClick={handleNext}
+            className="p-4 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 active:scale-95 rounded-2xl transition-all"
+          >
+            <SkipForward size={24} fill="currentColor" />
+          </button>
         </div>
+        
+        <div className="w-[52px]" /> {/* Visual Balance placeholder for Volume button */}
       </div>
     </div>
   );
